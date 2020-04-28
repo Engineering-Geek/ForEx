@@ -24,8 +24,33 @@ class SpecializedForexEnv(ForexEnv):
 
 # ------------------------------------------------[MAIN]------------------------------------------------
 print(colored("[INFO]: Generating Data for environment", "green"))
-data = DataProcessor(pickle_path=r"D:\Data\markets\CADJPY.pkl")
-env = SpecializedForexEnv(df=data.ask_df, window_size=12, frame_bound=(12, len(data.ask_df)))
-model = model_parent().build_model(input_size=env.observation_space.shape, nb_actions=env.action_space.n)
-trainer = Trainer(gym_environment=env, neural_network=model)
-trainer.reinforce_train_cem()
+data = DataProcessor(
+	pickle_path=r"D:\Data\markets\CADJPY.pkl"
+)
+
+print(colored("[INFO]: Creating ForEx environment for training", "green"))
+env = SpecializedForexEnv(
+	df=data.df_final,
+	window_size=12,
+	frame_bound=(12, len(data.df_final))
+)
+
+print(colored("[INFO]: Building Neural Network", "green"))
+model = model_parent().build_model(
+	input_size=env.observation_space.shape,
+	nb_actions=env.action_space.n
+)
+
+print(colored("[INFO]: Declaring trainer", "green"))
+trainer = Trainer(
+	gym_environment=env,
+	neural_network=model
+)
+
+print(colored("[INFO]: Cross entropy reinforcement training", "green"))
+trainer.reinforce_train_cem(
+	nb_steps_warmup=20000,
+	steps=100000
+)
+
+print(colored("[INFO]: PROGRAM FINISHED SUCCESSFULLY", "magenta"))
