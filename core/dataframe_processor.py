@@ -9,10 +9,11 @@ class DataProcessor:
 	def __init__(self, pickle_path="/media/melgiri/Storage/Data/markets/CADJPY.pkl", freq="Min"):
 		self.df = pd.read_pickle(filepath_or_buffer=pickle_path)
 		self.df = self.df.set_index("time")
-		self.ask_df = self._open_high_low_close(
+		self.df_final = self._open_high_low_close(
 			type_="ask",
 			freq=freq
 		)
+		self.df_final.to_pickle(r"D:\Data\markets\CADJPY_2.pkl")
 	
 	# self.bid_df = self._open_high_low_close(
 	# 	type_="bid",

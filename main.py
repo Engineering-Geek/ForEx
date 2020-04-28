@@ -1,7 +1,7 @@
 # Importing custom classes and functions
-from core.dataframe_processor import DataProcessor
-from core.Training import Trainer
-from core.Neural_Networks import SimpleNet1
+from core.dataframe_processor import *
+from core.Training import *
+from core.Neural_Networks import *
 
 from gym_anytrading.envs import ForexEnv
 from termcolor import colored
@@ -12,7 +12,7 @@ import os
 os.system('cls')
 
 # select which parent model to use
-model_parent = SimpleNet1
+model_parent = NeuralNet2
 
 
 # Specialized environment for gym as specified by the parent model above
@@ -24,8 +24,34 @@ class SpecializedForexEnv(ForexEnv):
 
 # ------------------------------------------------[MAIN]------------------------------------------------
 print(colored("[INFO]: Generating Data for environment", "green"))
-data = DataProcessor(pickle_path=r"D:\Data\markets\CADJPY.pkl")
-env = SpecializedForexEnv(df=data.ask_df, window_size=12, frame_bound=(12, len(data.ask_df)))
-model = model_parent().build_model(input_size=env.observation_space.shape, nb_actions=env.action_space.n)
-trainer = Trainer(gym_environment=env, neural_network=model)
-trainer.reinforce_train_cem()
+# data = DataProcessor(
+# 	pickle_path=r"D:\Data\markets\CADJPY.pkl"
+# )
+data = pd.read_pickle(r"D:\Data\markets\CADJPY_2.pkl")
+
+print(colored("[INFO]: Creating ForEx environment for training", "green"))
+env = SpecializedForexEnv(
+	df=data,
+	window_size=12,
+	frame_bound=(12, len(data))
+)
+
+print(colored("[INFO]: Building Neural Network", "green"))
+model = model_parent().build_model(
+	input_size=env.observation_space.shape,
+	nb_actions=env.action_space.n
+)
+
+print(colored("[INFO]: Declaring trainer", "green"))
+trainer = Trainer(
+	gym_environment=env,
+	neural_network=model
+)
+
+print(colored("[INFO]: Cross entropy reinforcement training", "green"))
+trainer.reinforce_train_cem(
+	nb_steps_warmup=20000,
+	steps=100000
+)
+
+print(colored("[INFO]: PROGRAM FINISHED SUCCESSFULLY", "magenta"))
