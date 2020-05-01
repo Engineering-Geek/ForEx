@@ -13,12 +13,7 @@ class DataProcessor:
 			type_="ask",
 			freq=freq
 		)
-		self.df_final.to_pickle(r"D:\Data\markets\CADJPY_2.pkl")
-	
-	# self.bid_df = self._open_high_low_close(
-	# 	type_="bid",
-	# 	freq=freq
-	# )
+		self.df_final[:10000].to_pickle(r"D:\Data\markets\CADJPY_3.pkl")
 	
 	def _open_high_low_close(self, type_="ask", freq="Min"):
 		series = self.df.groupby(pd.Grouper(freq=freq)).progress_apply(
