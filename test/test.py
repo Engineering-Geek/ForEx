@@ -1,3 +1,3 @@
-from termcolor import colored
+import pandas as pd
 
-print(colored("hello world", "blue"))
+pd.read_pickle(r"D:\Data\markets\CADJPY_2.pkl")[:10000].to_pickle(r"D:\Data\markets\CADJPY_3.pkl")
