@@ -1,4 +1,5 @@
-# Importing custom classes and functions
+from tensorflow.python.util import deprecation
+
 from core.dataframe_processor import *
 from core.Training import *
 from core.Neural_Networks import *
@@ -7,6 +8,11 @@ from gym_anytrading.envs import ForexEnv
 from gym import spaces
 
 from termcolor import colored
+
+import os
+
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # select which parent model to use
 model_parent = Single_Input_Convolutional
@@ -30,36 +36,36 @@ class SpecializedForexEnv(ForexEnv):
 
 
 # ------------------------------------------------[MAIN]------------------------------------------------
-print(colored("[INFO]: Generating Data for environment", "green"))
+print(colored("[INFO]: Generating Data for environment", "cyan"))
 # data = DataProcessor(
 # 	pickle_path=r"D:\Data\markets\CADJPY.pkl"
 # )
-data = pd.read_pickle(r"/media/melgiri/Storage/Data/markets/CADJPY_3.pkl")
+data = pd.read_pickle(r"/media/melgiri/Storage/Data/markets/CADJPY_2.pkl")
 
-print(colored("[INFO]: Creating ForEx environment for training", "green"))
+print(colored("[INFO]: Creating ForEx environment for training", "cyan"))
 env = SpecializedForexEnv(
 	df=data,
 	window_size=12,
 	frame_bound=(12, len(data))
 )
 
-print(colored("[INFO]: Building Neural Network", "green"))
+print(colored("[INFO]: Building Neural Network", "cyan"))
 model = model_parent().build_model(
 	input_size=env.observation_space.shape,
 	nb_actions=env.action_space.n
 )
-print(colored("[INFO]: OBS Space- {}".format(str(env.observation_space)), "green"))
+print(colored("[INFO]: OBS Space- {}".format(str(env.observation_space)), "cyan"))
 
-print(colored("[INFO]: Declaring trainer", "green"))
+print(colored("[INFO]: Declaring trainer", "cyan"))
 trainer = Trainer(
 	gym_environment=env,
 	neural_network=model
 )
 
-print(colored("[INFO]: Cross entropy reinforcement training", "green"))
+print(colored("[INFO]: Cross entropy reinforcement training", "cyan"))
 trainer.reinforce_train_cem(
-	nb_steps_warmup=20000,
-	steps=100000
+	nb_steps_warmup=10000,
+	steps=1000000
 )
 
 print(colored("[INFO]: PROGRAM FINISHED SUCCESSFULLY", "magenta"))
