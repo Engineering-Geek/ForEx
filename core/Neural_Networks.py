@@ -7,7 +7,7 @@ import gym_anytrading
 from matplotlib import pyplot as plt
 from PIL import Image
 
-json_file = json.load(open(r"C:\Users\Melgiri\PycharmProjects\ForEx\settings\settings.json"))
+json_file = json.load(open(r"/home/melgiri/PycharmProjects/ForEx/settings/settings.json"))
 image_dimensions = [json_file["Image Size"][0], json_file["Image Size"][1]]
 
 
@@ -63,15 +63,15 @@ class NeuralNet2(SimpleNet1):
 		return self.model
 
 
-class NeuralNet3(SimpleNet1):
+class Single_Input_Convolutional(SimpleNet1):
 	def specialized_data_funnel(self, env=gym.make("forex-v0")):
 		prices_df = env.df.loc[:, 'Close']
-		
+
 		prices = prices_df.to_numpy()[env.frame_bound[0] - env.window_size:env.frame_bound[1]]
 		# Just create a single image for the library to understand the observation space. Don't
 		#   worry about the data input for now
 		img_np_array = np.asarray(PriceFrame_to_ImgArray(prices_df.to_numpy(), env))
-		
+
 		return prices, img_np_array
 	
 	def specialized_observation(self, env=gym.make("forex-v0")):
