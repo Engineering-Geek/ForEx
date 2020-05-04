@@ -18,6 +18,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 model_parent = Single_Input_Convolutional
 
 
+# ----------------------------------------------------------------------------------------------------
 # Specialized environment for gym as specified by the parent model above. Edit according to the neural
 #   network you are using.
 class SpecializedForexEnv(ForexEnv):
