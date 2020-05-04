@@ -1,3 +1,3 @@
-import pandas as pd
+import tensorflow as tf
 
-pd.read_pickle(r"D:\Data\markets\CADJPY_2.pkl")[:10000].to_pickle(r"D:\Data\markets\CADJPY_3.pkl")
+print(tf.test.is_gpu_available())
