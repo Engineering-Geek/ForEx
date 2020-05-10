@@ -8,7 +8,7 @@ from rl.agents.cem import CEMAgent
 from rl.memory import EpisodeParameterMemory
 from rl.processors import Processor
 
-from core.Neural_Networks import SimpleNet1
+from core.Model_And_Environments import ModelAndEnvironment
 
 
 class MultiInputProcessor(Processor):
@@ -29,10 +29,10 @@ class MultiInputProcessor(Processor):
 
 
 class Trainer:
-	def __init__(self, gym_environment=gym.make("forex-v0"), neural_network=SimpleNet1().model):
+	def __init__(self, model_env=ModelAndEnvironment()):
 		# Assume user has their environment and model's input and output both compatible
-		self.env = gym_environment
-		self.model = neural_network
+		self.env = model_env.env
+		self.model = model_env.model
 	
 	def reinforce_train_cem(self, steps=60000, visualize=False, verbose=1, nb_steps_warmup=10000,
 	                        save_path=r"D:\Data\markets\weights", save_weights_name="cem_CADJPY_weights.h5f",

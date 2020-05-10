@@ -35,7 +35,7 @@ def df_candlestick_img(df=pd.DataFrame(), image_dimensions=()):
 	img_np_array = np.reshape(img_np_array, (image_dimensions[0], image_dimensions[1], 3))
 	
 	fig.clf()
-	return img_np_array
+	return img_np_array / 255.0
 
 
 def df_line_img(df=pd.DataFrame(), image_dimensions=()):
@@ -118,35 +118,60 @@ class Broker:
 class ForexEnv(gym.Env):
 	metadata = {'render.modes': ['human']}
 	
-	def __init__(self, input_shape=(299, 299, 3), nb_actions=2, windows=None, df=pd.DataFrame()):
+	def __init__(self, input_shape=(299, 299, 3), nb_actions=2, windows=None, df=pd.DataFrame(), fee=0.00):
 		if windows is None:
 			windows = [64]
 		self.image_shape = [input_shape[0], input_shape[1]]
+		self.fee = fee
 		
-		self.broker = Broker(transaction_fee=0.01, account=BankAccount())
+		self.broker = Broker(transaction_fee=self.fee, account=BankAccount())
 		self.windows = windows
-		self.index = max(self.windows)
+		self.index = max(self.windows) + 1
 		self.df = df
-		self.order_number = 0
+		self.custom_df = None
 		
-		image_spaces = {}
+		image_spaces = self._get_observation()
+		observations = {}
 		index = 0
-		first = True
-		for window in windows:
-			if first:
-				img = df_candlestick_img(df=self.df.iloc[self.index - window: self.index], image_dimensions=input_shape)
-				first = False
-			else:
-				img = df_line_img(df=self.df.iloc[self.index - window: self.index], image_dimensions=input_shape)
-			image_spaces.update({
-				"Input_{}".format(str(index)): spaces.Box(low=0.0, high=1.0, shape=np.shape(img), dtype=np.float64)
+		for observation in image_spaces:
+			observations.update({
+				"Input_{}".format(index): spaces.Box(low=0, high=1, shape=np.shape(observation))
 			})
 			index += 1
-		self.observation_space = spaces.Dict(image_spaces)
+		if len(observations.values()) > 1:
+			self.observation_space = spaces.Dict(image_spaces)
+		else:
+			self.observation_space = list(observations.values())[0]
 		self.action_space = spaces.Discrete(nb_actions)
 	
-	def step(self, action):
-		# Getting DataFrame window and it's images
+	def remake(self, input_shape=(299, 299, 3), nb_actions=2, windows=None, df=pd.DataFrame(), fee=0.00):
+		if windows is None:
+			windows = [64]
+		self.image_shape = [input_shape[0], input_shape[1]]
+		self.fee = fee
+		
+		self.broker = Broker(transaction_fee=self.fee, account=BankAccount())
+		self.windows = windows
+		self.index = max(self.windows) + 1
+		self.df = df
+		self.custom_df = None
+		
+		image_spaces = self._get_observation()
+		observations = {}
+		index = 0
+		for observation in image_spaces:
+			observations.update({
+				"Input_{}".format(index): spaces.Box(low=0, high=1, shape=np.shape(observation))
+			})
+			index += 1
+		print(observations)
+		if len(observations.values()) > 1:
+			self.observation_space = spaces.Dict(image_spaces)
+		else:
+			self.observation_space = list(observations.values())[0]
+		self.action_space = spaces.Discrete(nb_actions)
+	
+	def _get_observation(self):
 		images = []
 		first = True
 		for window in self.windows:
@@ -157,39 +182,45 @@ class ForexEnv(gym.Env):
 			else:
 				img = df_line_img(df=self.df.iloc[self.index - window: self.index], image_dimensions=self.image_shape)
 			images.append(img)
-		
-		# Get current row for calculations
-		current_row = self.df.iloc[self.index]
-		
-		# Trade and get respective reward
+		return images
+	
+	def _trade_reward(self, exchange_rate=1.0, action=None):
 		reward = None
+		if action is None:
+			TypeError("'action' has no value passed")
 		if action == 0:
-			reward = self.broker.buy(exchange_rate=current_row["Close"])
+			reward = self.broker.buy(exchange_rate=exchange_rate)
 		elif action == 1:
-			reward = self.broker.sell(exchange_rate=current_row["Close"])
-		
-		# Number of orders?
-		if self.order_number != self.broker.order_number:
-			self.order_number += 1
-		self.index += 1
-		
-		# Is done?
+			reward = self.broker.sell(exchange_rate=exchange_rate)
+		return reward
+	
+	def _is_done(self):
 		done = False
-		if self.index >= len(self.df):
+		if self.index >= len(self.df) - 1:
 			done = True
-		
+		return done
+	
+	def step(self, action):
+		current_row = self.df.iloc[self.index]
+		# Getting DataFrame window and it's images
+		observation = self._get_observation()
+		# Trade and get respective reward
+		reward = self._trade_reward(current_row["Close"], action)
+		# Is done?
+		done = self._is_done()
 		# Summarize all this as info
 		info = {
 			"reward": reward,
 			"number of trades": self.broker.order_number,
 			"account balance": self.broker.account.calculate_balance(exchange_rate=current_row["Close"])
 		}
-		return images, reward, done, info
+		# Increase index so we can calculate the next observation set
+		self.index += 1
+		return observation, reward, done, info
 	
 	def reset(self):
-		self.broker = Broker(transaction_fee=0.01, account=BankAccount())
-		self.index = max(self.windows)
-		self.order_number = 0
+		self.broker = Broker(transaction_fee=self.fee, account=BankAccount())
+		self.index = max(self.windows) + 1
 		images, reward, done, info = self.step(1)
 		return images
 	
