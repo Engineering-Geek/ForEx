@@ -27,7 +27,7 @@ class ModelAndEnvironment:
 			action_space=self.env.action_space
 		)
 	
-	def _create_neural_network(self, observation_space=gym.spaces.Box(0, 1, (1,)), action_space=gym.spaces.Discrete(1)):
+	def _create_neural_network(self, observation_space=gym.spaces.Dict(), action_space=gym.spaces.Discrete(1)):
 		raw_inputs = []
 		inputs = []
 		index = 0
