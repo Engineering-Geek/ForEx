@@ -8,7 +8,7 @@ from rl.agents.cem import CEMAgent
 from rl.memory import EpisodeParameterMemory
 from rl.processors import Processor
 
-from core.Model_And_Environments import ModelAndEnvironment
+from core.Model_Environment import ModelAndEnvironment
 
 
 class MultiInputProcessor(Processor):
