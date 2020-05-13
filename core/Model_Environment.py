@@ -5,7 +5,7 @@ import gym
 import json
 import gym_forex
 
-json_file = json.load(open(r"C:\Users\Melgiri\PycharmProjects\ForEx\settings\settings.json"))
+json_file = json.load(open(r"D:\Data\markets\settings\settings.json"))
 image_dimensions = [json_file["Image Size"][0], json_file["Image Size"][1]]
 
 env_name = "forex-v0"
@@ -20,7 +20,7 @@ class ModelAndEnvironment:
 		"[NOTE]: This is the main instance of the learning environment that will be referenced through the whole time"
 		self.env = base_env
 		self.env._get_observation = self._get_observation
-		self.env.remake(input_shape=input_shape, windows=windows, df=df)
+		self.env.__init__(input_shape=input_shape, windows=windows, df=df)
 		
 		self.model = self._create_neural_network(
 			observation_space=self.env.observation_space,

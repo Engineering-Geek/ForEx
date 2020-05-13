@@ -144,33 +144,6 @@ class ForexEnv(gym.Env):
 			self.observation_space = list(observations.values())[0]
 		self.action_space = spaces.Discrete(nb_actions)
 	
-	def remake(self, input_shape=(299, 299, 3), nb_actions=2, windows=None, df=pd.DataFrame(), fee=0.00):
-		if windows is None:
-			windows = [64]
-		self.image_shape = [input_shape[0], input_shape[1]]
-		self.fee = fee
-		
-		self.broker = Broker(transaction_fee=self.fee, account=BankAccount())
-		self.windows = windows
-		self.index = max(self.windows) + 1
-		self.df = df
-		self.custom_df = None
-		
-		image_spaces = self._get_observation()
-		observations = {}
-		index = 0
-		for observation in image_spaces:
-			observations.update({
-				"Input_{}".format(index): spaces.Box(low=0, high=1, shape=np.shape(observation))
-			})
-			index += 1
-		print(observations)
-		if len(observations.values()) > 1:
-			self.observation_space = spaces.Dict(image_spaces)
-		else:
-			self.observation_space = list(observations.values())[0]
-		self.action_space = spaces.Discrete(nb_actions)
-	
 	def _get_observation(self):
 		images = []
 		first = True
