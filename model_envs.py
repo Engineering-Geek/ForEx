@@ -1,13 +1,15 @@
 from core.Model_Environment import *
-from gym_forex.envs.forex_env import df_line_img, df_candlestick_img
 
 
 class ModelEnv1(ModelAndEnvironment):
-	def __init__(self, input_shape=(300, 300), windows=None, df=pd.read_pickle(r"D:\Data\markets\MT5\CADJPY.pkl")):
+	def __init__(self, input_shape=(300, 300), windows=None, df=pd.read_pickle(r"D:\Data\markets\MT5\CADJPY.pkl"),
+	             fee=0):
+		if windows is None:
+			windows = [64]
 		temp_env = gym.make("forex-v0")
 		self._create_neural_network = self._create_neural_network
 		self._get_observation = temp_env._get_observation
-		super(ModelEnv1, self).__init__(input_shape=input_shape, windows=windows, df=df)
+		super(ModelEnv1, self).__init__(input_shape=input_shape, windows=windows, df=df, fee=fee)
 	
 	def _create_neural_network(self, observation_space=gym.spaces.Dict(), action_space=gym.spaces.Discrete(1)):
 		raw_inputs = []

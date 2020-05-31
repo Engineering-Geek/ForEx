@@ -89,11 +89,8 @@ class Broker:
 	def buy(self, exchange_rate):
 		if self.account.currency2 == 0:
 			self.order_number += 1
-			# Take the transaction fee
 			self.account.currency1 *= (1 - self.transaction_fee)
-			# Do transaction
 			self.account.transfer_1_2(exchange_rate)
-		# calculate reward
 		current_balance = self.account.calculate_balance(exchange_rate)
 		dif = current_balance - self.previous_balance
 		reward = 2 * dif / (current_balance + self.previous_balance)
@@ -103,11 +100,8 @@ class Broker:
 	def sell(self, exchange_rate):
 		if self.account.currency1 == 0:
 			self.order_number += 1
-			# Take the transaction fee
 			self.account.currency2 *= (1 - self.transaction_fee)
-			# Do transaction
 			self.account.transfer_2_1(exchange_rate)
-		# calculate reward
 		current_balance = self.account.calculate_balance(exchange_rate)
 		dif = current_balance - self.previous_balance
 		reward = 2 * dif / (current_balance + self.previous_balance)
@@ -139,7 +133,7 @@ class ForexEnv(gym.Env):
 			})
 			index += 1
 		if len(observations.values()) > 1:
-			self.observation_space = spaces.Dict(image_spaces)
+			self.observation_space = spaces.Dict(observations)
 		else:
 			self.observation_space = list(observations.values())[0]
 		self.action_space = spaces.Discrete(nb_actions)

@@ -5,8 +5,11 @@ import gym
 import numpy as np
 # CEM imports
 from rl.agents.cem import CEMAgent
+from rl.agents.dqn import DQNAgent
+from rl.agents.sarsa import SARSAAgent
 from rl.memory import EpisodeParameterMemory
 from rl.processors import Processor
+from rl.policy import EpsGreedyQPolicy, LinearAnnealedPolicy
 
 from core.Model_Environment import ModelAndEnvironment
 
@@ -16,6 +19,7 @@ class MultiInputProcessor(Processor):
 		self.nb_inputs = nb_inputs
 	
 	def process_state_batch(self, state_batch):
+		# print(np.shape(state_batch))
 		input_batches = [[] for _ in range(self.nb_inputs)]
 		for state in state_batch:
 			processed_state = [[] for _ in range(self.nb_inputs)]
@@ -25,7 +29,9 @@ class MultiInputProcessor(Processor):
 					s.append(o)
 			for idx, s in enumerate(processed_state):
 				input_batches[idx].append(s)
-		return [np.array(x)[0] for x in input_batches]
+		final = [np.array(x)[0] for x in input_batches]
+		# print(np.shape(final))
+		return final
 
 
 class Trainer:
@@ -45,9 +51,76 @@ class Trainer:
 			nb_actions=nb_actions,
 			memory=memory,
 			nb_steps_warmup=nb_steps_warmup,
-			processor=MultiInputProcessor(nb_inputs=len(self.model.inputs)))
+			processor=MultiInputProcessor(nb_inputs=len(self.model.inputs)),
+		)
 		agent.compile()
-		agent.fit(self.env, nb_steps=steps, visualize=visualize, verbose=verbose, log_interval=log_interval)
+		agent.fit(
+			self.env,
+			nb_steps=steps,
+			visualize=visualize,
+			verbose=verbose,
+			log_interval=log_interval
+		)
+		
+		pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
+		file_path = os.path.join(save_path, save_weights_name)
+		agent.save_weights(filepath=file_path, overwrite=True)
+	
+	def reinforce_train_sarsa(self, steps=60000, visualize=False, verbose=1, nb_steps_warmup=10000,
+	                          save_path=r"D:\Data\markets\weights", save_weights_name="cem_CADJPY_weights.h5f",
+	                          log_interval=1000):
+		nb_actions = self.env.action_space.n
+		policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=0.1, value_test=.05,
+		                              nb_steps=nb_steps_warmup)
+		agent = SARSAAgent(
+			self.model,
+			nb_actions=nb_actions,
+			policy=policy,
+			gamma=0.99,
+			nb_steps_warmup=nb_steps_warmup,
+			train_interval=1,
+			delta_clip=np.inf
+		)
+		agent.compile(optimizer="Adam")
+		agent.fit(
+			self.env,
+			nb_steps=steps,
+			visualize=visualize,
+			verbose=verbose,
+			log_interval=log_interval
+		)
+		
+		pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
+		file_path = os.path.join(save_path, save_weights_name)
+		agent.save_weights(filepath=file_path, overwrite=True)
+	
+	"""
+	DQN METHOD BROKEN; Don't use unless you're trying to fix it
+	"""
+	
+	def reinforce_train_dqn(self, steps=60000, visualize=False, verbose=1, nb_steps_warmup=10000,
+	                        save_path=r"D:\Data\markets\weights", save_weights_name="cem_CADJPY_weights.h5f",
+	                        log_interval=1000):
+		nb_actions = self.env.action_space.n
+		policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=0.1, value_test=.05,
+		                              nb_steps=nb_steps_warmup)
+		memory = EpisodeParameterMemory(limit=200, window_length=1)
+		agent = DQNAgent(
+			model=self.model,
+			nb_actions=nb_actions,
+			memory=memory,
+			nb_steps_warmup=nb_steps_warmup,
+			processor=MultiInputProcessor(nb_inputs=len(self.model.inputs)),
+			policy=policy,
+		)
+		agent.compile(optimizer="Adam")
+		agent.fit(
+			self.env,
+			nb_steps=steps,
+			visualize=visualize,
+			verbose=verbose,
+			log_interval=log_interval
+		)
 		
 		pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
 		file_path = os.path.join(save_path, save_weights_name)

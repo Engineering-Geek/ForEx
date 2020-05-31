@@ -13,14 +13,15 @@ base_env = gym.make(env_name)
 
 
 class ModelAndEnvironment:
-	def __init__(self, input_shape=(300, 300), windows=None, df=pd.read_pickle(r"D:\Data\markets\MT5\CADJPY.pkl")):
+	def __init__(self, input_shape=(300, 300), windows=None, df=pd.read_pickle(r"D:\Data\markets\MT5\CADJPY.pkl"),
+	             fee=0):
 		if windows is None:
 			windows = [32]
 		# -------------------------------------------------[CREATE ENV]-------------------------------------------------
 		"[NOTE]: This is the main instance of the learning environment that will be referenced through the whole time"
 		self.env = base_env
 		self.env._get_observation = self._get_observation
-		self.env.__init__(input_shape=input_shape, windows=windows, df=df)
+		self.env.__init__(input_shape=input_shape, windows=windows, df=df, fee=fee)
 		
 		self.model = self._create_neural_network(
 			observation_space=self.env.observation_space,
@@ -47,10 +48,11 @@ class ModelAndEnvironment:
 		else:
 			concatenated_layer = flattened_layer
 		hidden_layer_1 = keras.layers.Dense(units=32, activation="relu", name="Hidden_Layer_1")(concatenated_layer)
-		hidden_layer_2 = keras.layers.Dense(units=8, activation="relu", name="Hidden_Layer_3")(hidden_layer_1)
+		hidden_layer_2 = keras.layers.Dense(units=8, activation="relu", name="Hidden_Layer_2")(hidden_layer_1)
 		output_layer = keras.layers.Dense(units=action_space.n, activation="softmax", name="Outputs")(hidden_layer_2)
 		
-		return keras.models.Model(inputs=raw_inputs, outputs=output_layer)
+		self.model = keras.models.Model(inputs=raw_inputs, outputs=output_layer)
+		return self.model
 	
 	def _get_observation(self):
 		index = self.env.index
@@ -60,9 +62,8 @@ class ModelAndEnvironment:
 		
 		observations = []
 		for window in windows:
-			custom_window = self.env.custom_df.iloc[index - window: index]
+			custom_window = self.env.custom_df.iloc[index - window: index].to_numpy()
 			observations.append(np.asarray(custom_window))
-		
 		return observations
 
 
