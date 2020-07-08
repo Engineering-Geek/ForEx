@@ -7,6 +7,7 @@ This bot will consist of X neural networks, where X numbers is being experimente
 I strongly encourage you to look through my code as this documentation will remain incomplete until I finish the code and have it working. What is here is a dramatic oversimplification of what I'm doing. I have more in-depth documentation within the code.
 
 For example, in the convolutional input layer, the bot will see this:
+
 ![graph image](https://i.imgur.com/03KsW34.png)
 
 and in the traditional percent change input, the model will see something similar to this (just the last column; column E):
