@@ -8,6 +8,9 @@ I strongly encourage you to look through my code as this documentation will rema
 
 For example, in the convolutional input layer, the bot will see this:
 ![graph image](https://i.imgur.com/03KsW34.png)
+
 and in the traditional percent change input, the model will see something similar to this (just the last column; column E):
+
 ![table image](https://i.stack.imgur.com/wvmET.png)
+
 I am currently working on automating the testing procedures so the model can test various models via Reinforcement learning and show me a visualization of the statistics with either Matplotlib or with any other visualizing program.
