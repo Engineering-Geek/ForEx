@@ -1,4 +1,7 @@
 # ForEx
+___
+Note: I will be working on this project again soon; I destroyed my Linux partition on my dual-booted PC when I was talking to a cute girl yesterday. Will resume work once I can either get a VM on Windows for Ubuntu working OR I find a way to dual-boot my PC again.
+___
 This project's primary purpose is to take my savings from co-op/internships and invest them in various markets. This ForEx trading bot will then trade on various platforms and amplify my earnings, and hopefully generate enough cash flow for me to start my own startup.
 
 ## Core workings
