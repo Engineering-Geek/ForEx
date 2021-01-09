@@ -8,3 +8,6 @@
 out
 gen
 /venv/
+/core/result
+/core/videos
+*/.ipynb_checkpoints
