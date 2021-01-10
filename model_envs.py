@@ -1,9 +1,8 @@
-from core.Model_Environment import *
-from gym_forex.envs.forex_env import df_line_img, df_candlestick_img
+from core.Keras_Model_Environment import *
 
 
 class ModelEnv1(ModelAndEnvironment):
-	def __init__(self, input_shape=(300, 300), windows=None, df=pd.read_pickle(r"D:\Data\markets\MT5\CADJPY.pkl")):
+	def __init__(self, input_shape=(300, 300), windows=None, df=pd.read_pickle(r"C:\Users\melgi\Markets\data\CADJPY.pkl")):
 		temp_env = gym.make("forex-v0")
 		self._create_neural_network = self._create_neural_network
 		self._get_observation = temp_env._get_observation

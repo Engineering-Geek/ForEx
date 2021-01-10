@@ -1,0 +1,7 @@
+README.md
+setup.py
+gym_forex.egg-info/PKG-INFO
+gym_forex.egg-info/SOURCES.txt
+gym_forex.egg-info/dependency_links.txt
+gym_forex.egg-info/requires.txt
+gym_forex.egg-info/top_level.txt

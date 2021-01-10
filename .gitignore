@@ -8,3 +8,8 @@
 out
 gen
 /venv/
+/core/result/
+/core/videos/
+*/.ipynb_checkpoints/
+/lightning_logs/
+/.idea/
