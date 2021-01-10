@@ -240,4 +240,7 @@ jjdsjfdjsfdsmdfs
 
 if __name__ == '__main__':
 	print("I LOVE YOU FATIMA SAAAAAAAAAAAAAAAB")
-
+	word = "hi, 😍\n\t😐🍕"
+	new_word = "🍽🍴🍻"
+	sentence = word + new_word
+	print(sentence)
