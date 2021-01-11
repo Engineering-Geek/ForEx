@@ -51,7 +51,7 @@ def df_line_img(df=pd.DataFrame(), image_dimensions=()):
 
 
 class BankAccount:
-	def __init__(self, starting=2000.00):
+	def __init__(self, starting=1.00):
 		self.balance = starting
 		self.currency1 = starting
 		self.currency2 = 0
@@ -77,11 +77,12 @@ class BankAccount:
 
 
 class Broker:
-	def __init__(self, transaction_fee=0.01, account=BankAccount()):
+	def __init__(self, transaction_fee=0.00, account=BankAccount()):
 		# 1% trading fee per trade
 		self.account = account
 		self.transaction_fee = transaction_fee
 		self.previous_balance = self.account.currency1
+		self.previous_exchange_rate = 0
 		self.order_number = 0
 	
 	def buy(self, exchange_rate):
@@ -91,23 +92,21 @@ class Broker:
 			self.account.currency1 *= (1 - self.transaction_fee)
 			# Do transaction
 			self.account.transfer_1_2(exchange_rate)
-		# calculate reward
-		current_balance = self.account.calculate_balance(exchange_rate)
-		dif = current_balance - self.previous_balance
-		reward = 2 * dif / (current_balance + self.previous_balance)
-		self.previous_balance = current_balance
-		return reward
+		return self.__get_reward__(exchange_rate)
 	
 	def sell(self, exchange_rate):
+		pseudo_reward = 0
 		if self.account.currency1 == 0:
 			self.order_number += 1
 			# Take the transaction fee
 			self.account.currency2 *= (1 - self.transaction_fee)
 			# Do transaction
 			self.account.transfer_2_1(exchange_rate)
-		# calculate reward
+		return self.__get_reward__(exchange_rate)
+
+	def __get_reward__(self, exchange_rate):
 		current_balance = self.account.calculate_balance(exchange_rate)
-		dif = current_balance - self.previous_balance
-		reward = 2 * dif / (current_balance + self.previous_balance)
+		reward = current_balance - self.previous_balance
 		self.previous_balance = current_balance
 		return reward
+

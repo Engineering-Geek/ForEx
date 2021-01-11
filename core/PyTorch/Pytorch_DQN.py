@@ -1,33 +1,36 @@
 import argparse
-from abc import ABC
-from collections import OrderedDict, deque
-from collections import namedtuple
+from collections import OrderedDict
 from typing import Tuple
 
 import gym
 import gym_forex
-import numpy as np
-from numpy import array
 import pytorch_lightning as pl
+from pytorch_lightning import loggers as pl_loggers
 import torch
 import torch.optim as optim
 from torch import nn
 from torch import Tensor
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
-from torch.utils.data.dataset import IterableDataset
 from typing import List
+
+from core.PyTorch.RL_Classes import ReplayBuffer, RLDataset
+from core.PyTorch.Agents import Agent
 
 
 class DQN(nn.Module):
-	def __init__(self, obs_size: List[int], n_actions: int, hidden_size: int = 128):
+	def __init__(self, obs_size: List[int], n_actions: int):
 		super(DQN, self).__init__()
 		self.input = nn.Sequential(
-			nn.Linear(obs_size[0], hidden_size),
+			nn.Linear(obs_size[0], 128),
+			nn.ReLU(),
+			nn.Linear(128, 64),
 			nn.ReLU(),
 		)
 		self.final_layer = nn.Sequential(
-			nn.Linear(hidden_size * obs_size[1], n_actions),
+			nn.Linear(64 * obs_size[1], n_actions*4),
+			nn.ReLU(),
+			nn.Linear(n_actions * 4, n_actions)
 		)
 	
 	def forward(self, batch: Tensor):
@@ -39,74 +42,7 @@ class DQN(nn.Module):
 		middle_layer = torch.cat(middle_layer, 1)
 		output = self.final_layer(middle_layer)
 		return output
-
-
-Experience = namedtuple('Experience', field_names=['state', 'action', 'reward', 'done', 'new_state'])
-
-
-class ReplayBuffer:
-	def __init__(self, capacity: int) -> None:
-		self.buffer = deque(maxlen=capacity)
 	
-	def __len__(self) -> int:
-		return len(self.buffer)
-	
-	def append(self, experience: Experience) -> None:
-		self.buffer.append(experience)
-	
-	def sample(self, batch_size: int) -> Tuple:
-		indices = np.random.choice(len(self.buffer), batch_size, replace=False)
-		states, actions, rewards, done, next_states = zip(*[self.buffer[idx] for idx in indices])
-		return array(states), array(actions), array(rewards, dtype=np.float32), array(done, dtype=np.bool), array(next_states)
-
-
-class RLDataset(IterableDataset, ABC):
-	def __init__(self, buffer: ReplayBuffer, sample_size: int = 200) -> None:
-		self.buffer = buffer
-		self.sample_size = sample_size
-	
-	def __iter__(self) -> Tuple:
-		states, actions, rewards, done, new_states = self.buffer.sample(self.sample_size)
-		for i in range(len(done)):
-			yield states[i], actions[i], rewards[i], done[i], new_states[i]
-
-
-class Agent:
-	def __init__(self, env: gym.Env, replay_buffer: ReplayBuffer) -> None:
-		self.env = env
-		self.env.__init__()
-		self.replay_buffer = replay_buffer
-		self.reset()
-		self.state = self.env.reset()
-	
-	def reset(self) -> None:
-		self.state = self.env.reset()
-	
-	def get_action(self, net: nn.Module, epsilon: float, device: str) -> int:
-		if np.random.random() < epsilon:
-			action = self.env.action_space.sample()
-		else:
-			state = torch.tensor([self.state])
-			
-			if device not in ['cpu']:
-				state = state.cuda(torch.device(device))
-			
-			q_values = net(state)
-			_, action = torch.max(q_values, dim=1)
-			action = int(action.item())
-		
-		return action
-	
-	@torch.no_grad()
-	def play_step(self, net: nn.Module, epsilon: float = 0.0, device: str = 'cpu') -> Tuple[float, bool]:
-		action = self.get_action(net, epsilon, device)
-		new_state, reward, done, _ = self.env.step(action)
-		exp = Experience(self.state, action, reward, done, new_state)
-		self.replay_buffer.append(exp)
-		self.state = new_state
-		self.reset() if done else None
-		return reward, done
-
 
 class DQNLightning(pl.LightningModule):
 	def __init__(self, hparams: argparse.Namespace) -> None:
@@ -114,6 +50,7 @@ class DQNLightning(pl.LightningModule):
 		self.hparams = hparams
 		
 		self.env = gym.make(self.hparams.env)
+		self.logger = pl_loggers.TensorBoardLogger("tensorboard_logs/")
 		
 		self.net = DQN(self.env.observation_space.shape, self.env.action_space.n)
 		self.target_net = DQN(self.env.observation_space.shape, self.env.action_space.n)
@@ -164,11 +101,11 @@ class DQNLightning(pl.LightningModule):
 		if self.global_step % self.hparams.sync_rate == 0:
 			self.target_net.load_state_dict(self.net.state_dict())
 		
-		self.log("Total Reward", torch.tensor(self.total_reward).to(device))
-		self.log("Steps", torch.tensor(self.global_step).to(device), prog_bar=True)
-		self.log("Train Loss", loss, prog_bar=True)
-		self.log("Reward", torch.tensor(reward).to(device), prog_bar=True)
-		self.log("Episode Reward", torch.tensor(self.episode_reward).to(device), prog_bar=True)
+		self.log("Total Reward", torch.tensor(self.total_reward).to(device), logger=False, on_epoch=True)
+		self.log("Steps", torch.tensor(self.global_step).to(device), prog_bar=True, logger=True, on_epoch=True)
+		self.log("Train Loss", loss, prog_bar=False, logger=True, on_epoch=True)
+		self.log("Reward", torch.tensor(reward).to(device), prog_bar=False, logger=True, on_epoch=True)
+		self.log("Episode Reward", torch.tensor(self.episode_reward).to(device), prog_bar=True, logger=True, on_epoch=True)
 		
 		return OrderedDict({"loss": loss})
 	
