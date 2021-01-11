@@ -3,13 +3,14 @@ from abc import ABC
 import torch
 import torch.nn as nn
 from torch import Tensor
-import torch.nn.functional as F
+import torch.nn.functional as functional
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset
 from pytorch_lightning import Trainer
 from pytorch_lightning.core.lightning import LightningModule
 from typing import List
 import pandas as pd
+import numpy as np
 
 file_path = "C:/Users/melgi/Markets/data/EURUSD.pkl"
 
@@ -41,11 +42,9 @@ class BoundingAI(LightningModule):
 		)
 	
 	def forward(self, batch: Tensor):
-		batch = batch.float()
-		
 		input_layer = []
 		for index in range(len(batch[0, 0, :])):
-			input_layer_index = self.input(batch[:, :, index])
+			input_layer_index = self.input_layer(batch[:, :, index])
 			input_layer.append(input_layer_index)
 		
 		middle_layer = self.middle_layer(torch.cat(input_layer, 1))
@@ -53,29 +52,54 @@ class BoundingAI(LightningModule):
 		mean_prediction = self.mean_prediction(middle_layer)
 		std_prediction = self.mean_prediction(middle_layer)
 		
-		output = torch.cat([mean_prediction, std_prediction])
+		output = torch.cat([mean_prediction, std_prediction], dim=1)
 		return output
 	
-	def training_step(self, batch, batch_idx):
-		data, target = batch
-		logits = self.forward(data)
-		loss = F.nll_loss(logits, target)
-		return {'loss': loss}
+	def training_step(self, input_batch, batch_idx):
+		output = self.forward(batch=input_batch)
+		mean = output[:, 0]
+		std_dev = output[:, 0]
+		upper_bound = mean + std_dev
+		lower_bound = mean + std_dev
+		
+		return {'loss': 0}
 	
 	def configure_optimizers(self):
 		return torch.optim.Adam(self.parameters(), lr=1e-3)
 	
 	def train_dataloader(self) -> DataLoader:
-		df = pd.read_pickle(file_path)
-		# This operation will take up A SHIT TON of memory, if memory on RAM runs out, it will be likely here
-		raw_data = df.to_numpy()
-		final_data = []
+		dataloader = DataLoader(dataset=ForexDataset(path=file_path, windows=self.windows), batch_size=128)
+		return dataloader
+
+
+class ForexDataset(Dataset):
+	def __init__(self, path: str, windows: List[int], target_distance: int):
+		super().__init__()
+		self.data = pd.read_pickle(path).to_numpy()
+		self.max_window = max(windows)
+		self.windows = windows
+		self.target_distance = target_distance
+
+	def __len__(self):
+		return len(self.data) - self.max_window
+
+	def __getitem__(self, index):
+		index += self.max_window
+		x = []
 		for window in self.windows:
-			for index in range(len(raw_data)):
-				pass
+			x.append(self.data[index - window: index])
+		if len(self.windows) == 1:
+			x = x[0]
+		# Get
+		return torch.Tensor(x)
 
 
 def train():
 	obs_size = 128
 	trainer = Trainer()
-	model = BoundingAI(obs_size)
+	model = BoundingAI([128, 4], [128])
+	trainer.fit(model)
+
+
+if __name__ == '__main__':
+	train()
