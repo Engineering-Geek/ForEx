@@ -10,7 +10,7 @@ class ForexEnv(gym.Env):
 	
 	def __init__(self, input_shape=(299, 299, 3), nb_actions=2, windows=None, df=pd.DataFrame(), fee=0.00):
 		if windows is None:
-			windows = [64]
+			windows = [512]
 		self.image_shape = [input_shape[0], input_shape[1]]
 		self.fee = fee
 		

@@ -1,4 +1,52 @@
 """
+
+
+
+hi
+HIHIHIHI i completely forgot u were here!
+this made me sad
+Also brb gonna order some food; I'm craving super hard. Dinner budget of 1k calories; I had 1k calories so far today
+Going to get more serious about my diet tomorrow, today I can just meet the 2k requirements
+i luff u
+what will u do tmrw
+
+Brunch:
+	- tima
+	- Omelette :) heheh
+	- Grilled cheese sandwich
+	omg what if u like
+	put the omelette inside the grilled cheese sandwich
+	that is how I eat it... I also smear tomato sauce in there too
+EWWWWWW HOT SAUCE
+spicy
+ah yes
+i love tomato sauce
+wait uknow how ppl put ketchup like
+in their scrambled eggs
+what are ur thoughts on that
+if u like it, eat it. IDGAF
+
+i hate it
+babe
+can we have a playground part 2
+kek
+sure, let me change the filetype of the 2nd playground; in fact, let me create a whole folder for it
+
+the way i just started giggling
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 This file is dedicated to my sweet girlfriend and will forever be posted on my GitHub repository for everyone to see
 her cuteness!!!
 HIHIHIHI

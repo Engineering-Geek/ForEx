@@ -2,7 +2,7 @@ import argparse
 
 import pytorch_lightning as pl
 
-from core.Pytorch_Implimentation_2 import DQNLightning
+from core.PyTorch.Pytorch_DQN import DQNLightning
 
 
 def main(hparams) -> None:
@@ -10,7 +10,7 @@ def main(hparams) -> None:
 	trainer = pl.Trainer(
 		gpus=1,
 		distributed_backend="dp",
-		max_epochs=5000,
+		max_epochs=1000000,
 		val_check_interval=1000
 	)
 	trainer.fit(model)
