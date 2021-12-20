@@ -2,13 +2,12 @@ import gym
 import numpy as np
 import pandas as pd
 from gym import spaces
-from gym_forex.envs.forex_functions import Broker, BankAccount
 
 
 class ForexEnv(gym.Env):
 	metadata = {'render.modes': ['human']}
 	
-	def __init__(self, nb_actions=2, windows=None, df=pd.DataFrame(), fee=0.00):
+	def __init__(self, windows=None, df=pd.DataFrame()):
 		if windows is None:
 			windows = [256]
 		if df.empty:
@@ -17,10 +16,10 @@ class ForexEnv(gym.Env):
 		# Dataframe Preprocessing
 		
 		self.reward_multiplier = 1
-		self.fee = fee
-		self.broker = Broker(transaction_fee=self.fee, account=BankAccount())
 		self.windows = windows
 		self.index = max(self.windows) + 1
+		self.z_score_desired = 2
+		self.correct_reward = 0.95
 		# Convert dataframe into numpy arrays
 		self.data = df.to_numpy()
 		
@@ -34,7 +33,7 @@ class ForexEnv(gym.Env):
 			self.observation_space = spaces.Dict(sample_observation)
 		else:
 			self.observation_space = spaces.Box(low=0, high=1, shape=sample_observation.shape)
-		self.action_space = spaces.Discrete(nb_actions)
+		self.action_space = spaces.Box(low=0, high=1, shape=(2,))
 	
 	def _get_observation(self):
 		if len(self.windows) > 1:
@@ -65,22 +64,23 @@ class ForexEnv(gym.Env):
 		return reward
 	
 	def _is_done(self):
-		done = True if self.index >= len(self.data) - 1 else False
+		done = True if self.index >= len(self.data) - 2 else False
 		return done
 	
-	def step(self, action):
-		reward = self._trade_reward(self.data[self.index][3], action)
+	def step(self, prediction):
+		mean, std_dev = prediction
+		if mean - self.z_score_desired * std_dev < self.data[self.index + 1] < mean + self.z_score_desired * std_dev:
+			reward = self.correct_reward
+		else:
+			reward = 1 - self.correct_reward
 		info = {
-			"reward": reward,
-			"number of trades": self.broker.order_number,
-			"account balance": self.broker.account.calculate_balance(exchange_rate=self.data[self.index][3])
+			"reward": reward
 		}
 		next_observation, next_raw_observation = self._get_observation()
 		self.index += 1
 		return next_observation, reward, self._is_done(), info
 	
 	def reset(self):
-		self.broker = Broker(transaction_fee=self.fee, account=BankAccount())
 		self.index = max(self.windows) + 1
 		observation, reward, done, info = self.step(1)
 		return observation
@@ -88,6 +88,3 @@ class ForexEnv(gym.Env):
 	def render(self, mode='human', close=False):
 		pass
 
-
-if __name__ == '__main__':
-	ForexEnv(df=pd.read_pickle("../../../../data/CADJPY.pkl"))
